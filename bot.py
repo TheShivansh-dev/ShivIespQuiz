@@ -38,7 +38,9 @@ unanswered_poll = 0
 
 # Load quiz data from Excel
 used_srnos = set()
-
+def reset_used_srnos():
+    global used_srnos
+    used_srnos.clear()
 def load_quiz_data(file_path, selected_poll_count):
     global used_srnos
     try:
@@ -80,7 +82,7 @@ def load_quiz_data(file_path, selected_poll_count):
 async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         global is_quiz_active, correct_users, chat_id, unanswered_poll
-    
+        reset_used_srnos()
         # Check if a quiz is already active
         if is_quiz_active:
             try:
@@ -312,12 +314,14 @@ async def countdown_and_close_poll(poll_message, countdown_time, context):
 # Handle poll answers
 async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
+        print("enter here")
         answer: PollAnswer = update.poll_answer
         poll_id = answer.poll_id
         user_id = answer.user.id
         username = answer.user.username  # Get the username of the user
         selected_options = answer.option_ids
         # Check if poll ID exists in quiz_state
+        print("enter here 2",answer)
         if poll_id not in quiz_state:
             return
 
@@ -338,16 +342,11 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
             correct_users[username] += 1
         
         # Only calculate scores after the last poll
-        if quiz_data["poll_number"] == selected_poll_count:
-            await calculate_scores(update, context)
+        #if quiz_data["poll_number"] == selected_poll_count:
+        await calculate_scores(update, context)
     except (BadRequest, Forbidden, TimedOut) as e:
                 print(e)
 # Function to calculate scores
-async def calculate_scores(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        await display_results(update, context)
-    except (BadRequest, Forbidden, TimedOut) as e:
-                print(e)
 
 async def cancel_quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -374,48 +373,61 @@ async def cancel_quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     except (BadRequest, Forbidden, TimedOut) as e:
                 print(e)
 # Display quiz results
-async def display_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# Function to calculate scores
+async def calculate_scores(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        global is_quiz_active
-
-        # Gather the results of correct answers per user
-        result_message = "Quiz Results: 🥳🥳🥳🥳\n"
+        # Check if there are any responses in `correct_users` dictionary to display results
         
+        await display_results(update, context)
+        
+    except (BadRequest, Forbidden, TimedOut) as e:
+        print(e)
+
+# Display quiz results, even if only partial or no responses are available
+async def display_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global is_quiz_active
+
+    # Check if there are any scores to display
+    try:
+        result_message = "Quiz Results: 🥳🥳🥳🥳\n"
         # Sort by the number of correct answers and display each username with their score
         sorted_results = sorted(correct_users.items(), key=lambda x: x[1], reverse=True)
         
         top_10_results = sorted_results[:10]
-        
-        # Display each username with their score
-        p =1
-        for username, score in top_10_results:
-            if p==1:
-                result_message += f"🏆{p})- @{username}: {score}\n"
-            elif p==2:
-                result_message += f"🥈{p})- @{username}: {score}\n"
-            elif p==3:
-                result_message += f"🥉{p})- @{username}: {score}\n"
-            else:
-                result_message += f"🧌{p})- @{username}: {score}\n"
-                 
-            p = p+1
+        print(top_10_results)
+        if not top_10_results:
+            result_message = "No scores received. No one answered correctly."
+        else:
+            p = 1
+            for username, score in top_10_results:
+                if p == 1:
+                    result_message += f"🏆)- @{username}: {score}\n"
+                elif p == 2:
+                    result_message += f"🥈)- @{username}: {score}\n"
+                elif p == 3:
+                    result_message += f"🥉)- @{username}: {score}\n"
+                else:
+                    result_message += f"🧌{p})- @{username}: {score}\n"
+                p += 1
 
+        # Send the results message to the chat
         try:
             await context.bot.send_message(chat_id=chat_id, text=result_message)
         except Exception as e:
             print(f"Error sending message: {e}")
+    
+    except Exception as e:
+        print(f"Error sending message: {e}")
 
-        # Reset quiz active state
-        is_quiz_active = False
-    except (BadRequest, Forbidden, TimedOut) as e:
-                print(e)
+    # Reset quiz active state
+    is_quiz_active = False
 
 def main():
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler('startquiz', start_game_command))
     application.add_handler(CallbackQueryHandler(handle_difficulty_selection, pattern='^difficulty_'))
     application.add_handler(CallbackQueryHandler(handle_time_selection, pattern='^time_'))
-    application.add_handler(CallbackQueryHandler(handle_button_click, pattern='^\d+$'))
+    application.add_handler(CallbackQueryHandler(handle_button_click, pattern=r'^\d+$'))
     application.add_handler(PollAnswerHandler(handle_poll_answer))
     application.add_handler(CommandHandler('cancelquiz', cancel_quiz_command))
 
