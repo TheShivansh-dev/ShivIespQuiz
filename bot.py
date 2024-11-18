@@ -90,9 +90,9 @@ async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         chat_id = update.message.chat.id
         if chat_id not in ALLOWED_GROUP_IDS:
             try:
-                await update.message.reply_text("Due to the free service, you are not allowed to start a game in this group. Play there https://t.me/+yVFKtplWZUA0Yzhl or contact @O000000000O00000000O")
+                await update.message.reply_text("To Start This Quiz In Your Chat or Group Talk to My Sizzling Owner @V_ale_n_cia and say thanks to me in later")
             except (BadRequest, Forbidden, TimedOut) as e:
-                await update.message.chat.send_message("Due to the free service, you are not allowed to start a game in this group. Play there https://t.me/+yVFKtplWZUA0Yzhl or contact @O000000000O00000000O")
+                await update.message.chat.send_message("To Start This Quiz In Your Chat or Group Talk to My Sizzling Owner @V_ale_n_cia and say thanks to me in later")
             return
         # Check if a quiz is already active
         if is_quiz_active:
@@ -226,9 +226,9 @@ async def cancel_quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         chat_id = update.message.chat.id
         if chat_id not in ALLOWED_GROUP_IDS:
             try:
-                await update.message.reply_text("Due to the free service, you are not allowed to start a game in this group. Play there https://t.me/+yVFKtplWZUA0Yzhl or contact @O000000000O00000000O")
+                await update.message.reply_text("To Start This Quiz In Your Chat or Group Talk to My Sizzling Owner @V_ale_n_cia and say thanks to me in later")
             except (BadRequest, Forbidden, TimedOut) as e:
-                await update.message.chat.send_message("Due to the free service, you are not allowed to start a game in this group. Play there https://t.me/+yVFKtplWZUA0Yzhl or contact @O000000000O00000000O")
+                await update.message.chat.send_message("To Start This Quiz In Your Chat or Group Talk to My Sizzling Owner @V_ale_n_cia and say thanks to me in later")
             return
         # Check if the quiz is active
         if not is_quiz_active:
