@@ -85,7 +85,15 @@ def load_quiz_data(file_path, selected_poll_count):
 async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         global is_quiz_active, correct_users, chat_id, unanswered_poll
+        
         reset_used_srnos()
+        chat_id = update.message.chat.id
+        if chat_id not in ALLOWED_GROUP_IDS:
+            try:
+                await update.message.reply_text("Due to the free service, you are not allowed to start a game in this group. Play there https://t.me/+yVFKtplWZUA0Yzhl or contact @O000000000O00000000O")
+            except (BadRequest, Forbidden, TimedOut) as e:
+                await update.message.chat.send_message("Due to the free service, you are not allowed to start a game in this group. Play there https://t.me/+yVFKtplWZUA0Yzhl or contact @O000000000O00000000O")
+            return
         # Check if a quiz is already active
         if is_quiz_active:
             try:
@@ -96,7 +104,7 @@ async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return
 
         is_quiz_active = True  # Set to True when a new quiz starts
-        chat_id = update.message.chat.id
+        
         correct_users.clear()  # Reset scores at the beginning of each new quiz
 
         difficulty_keyboard = [
@@ -215,7 +223,13 @@ async def handle_time_selection(update: Update, context: ContextTypes.DEFAULT_TY
 async def cancel_quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         global is_quiz_active, quiz_state, correct_users
-
+        chat_id = update.message.chat.id
+        if chat_id not in ALLOWED_GROUP_IDS:
+            try:
+                await update.message.reply_text("Due to the free service, you are not allowed to start a game in this group. Play there https://t.me/+yVFKtplWZUA0Yzhl or contact @O000000000O00000000O")
+            except (BadRequest, Forbidden, TimedOut) as e:
+                await update.message.chat.send_message("Due to the free service, you are not allowed to start a game in this group. Play there https://t.me/+yVFKtplWZUA0Yzhl or contact @O000000000O00000000O")
+            return
         # Check if the quiz is active
         if not is_quiz_active:
             try:
