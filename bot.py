@@ -229,21 +229,22 @@ async def cancel_quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE
             return None
 
         global is_quiz_active, quiz_state, correct_users
-        chat_id = update.message.chat.id
-        if chat_id not in ALLOWED_GROUP_IDS:
+        msg_id = update.message.chat.id
+        if msg_id not in ALLOWED_GROUP_IDS:
             try:
                 await update.message.reply_text("To Start This Quiz In Your Chat or Group Talk to My Sizzling Owner @V_ale_n_cia and say thanks to me in later")
             except (BadRequest, Forbidden, TimedOut) as e:
                 await update.message.chat.send_message("To Start This Quiz In Your Chat or Group Talk to My Sizzling Owner @V_ale_n_cia and say thanks to me in later")
             return
         # Check if the quiz is active
+        chat_id = update.message.chat.id
         if not is_quiz_active:
             try:
                 await update.message.chat.send_message("No quiz is currently active.")
             except (BadRequest, Forbidden, TimedOut) as e:
                 print(f"Error canceling the quiz: {e}")
             return
-
+        
         # Reset global variables related to the quiz
         is_quiz_active = False
         quiz_state.clear()
