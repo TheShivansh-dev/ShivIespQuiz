@@ -36,6 +36,8 @@ is_quiz_active = False  # New variable to track if a quiz is active
 chat_id = None  # Current chat ID for the quiz
 selected_time_limit = 10  # Default time limit
 unanswered_poll = 0
+cancel_active = False
+display_chat=0
 
 # Load quiz data from Excel
 used_srnos = set()
@@ -84,7 +86,8 @@ def load_quiz_data(file_path, selected_poll_count):
 
 async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        global is_quiz_active, correct_users, chat_id, unanswered_poll
+        global is_quiz_active, correct_users, chat_id, unanswered_poll,cancel_active
+        cancel_active = False
         
         reset_used_srnos()
         chat_id = update.message.chat.id
@@ -222,6 +225,9 @@ async def handle_time_selection(update: Update, context: ContextTypes.DEFAULT_TY
             
 async def cancel_quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
+        if cancel_active:
+            return None
+
         global is_quiz_active, quiz_state, correct_users
         chat_id = update.message.chat.id
         if chat_id not in ALLOWED_GROUP_IDS:
@@ -241,7 +247,7 @@ async def cancel_quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         # Reset global variables related to the quiz
         is_quiz_active = False
         quiz_state.clear()
-        correct_users.clear()
+        
 
         # Notify users that the quiz has been canceled
         try:
@@ -255,9 +261,9 @@ async def cancel_quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 # Handle button click and start quizzes
 async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        global selected_poll_count,active_poll
+        global selected_poll_count,active_poll,cancel_active
         query = update.callback_query
-
+      
         # If quiz is not active, ignore this input
         if not is_quiz_active:
             await query.answer("Please start a new quiz with /startquiz or cancel with /cancelquiz")
@@ -274,7 +280,7 @@ async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE
                 print(f"Error canceling the quiz: {e}")
             
 
-        
+        cancel_active = True
         selected_polls = load_quiz_data(EXCEL_FILE,selected_poll_count) 
         selected_polls.append({
             'question': "Do You Want The Result of The Quiz",
@@ -324,7 +330,7 @@ async def countdown_and_close_poll(poll_message, countdown_time, context):
     try:
         # Wait for the countdown time to pass
         await asyncio.sleep(countdown_time)
-        
+        print("enter here 1")
         try:
             # Stop the poll after the time limit expires
             await poll_message.stop_poll()
@@ -332,6 +338,7 @@ async def countdown_and_close_poll(poll_message, countdown_time, context):
             # If the bot was kicked from the group, reset the quiz state for the chat
             chat_id = poll_message.chat.id
             global is_quiz_active
+
             is_quiz_active = False  # Mark the quiz as inactive
             quiz_state.clear()  # Clear the quiz state
             correct_users.clear()  # Reset user scores
@@ -374,7 +381,7 @@ final_poll_responses = {}
 # Handle poll answers
 async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        global final_poll_responses
+        global final_poll_responses,display_chat
         
         answer: PollAnswer = update.poll_answer
         poll_id = answer.poll_id
@@ -386,12 +393,13 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
         # Check if poll ID exists in quiz_state
         if poll_id not in quiz_state:
             return
-
+        print("issue is here 1")
         # Get the quiz data for the poll
         quiz_data = quiz_state[poll_id]
         correct_answer = quiz_data["correct_answer"]
         options = quiz_data["options"]
         curr_poll = quiz_data["poll_number"]
+        display_chat = quiz_data["chat_id"]
         quiz_data["response_count"] += 1
 
         # Get the user's selected answer
@@ -421,6 +429,7 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
                 # Reset final_poll_responses after the results are shown
                 final_poll_responses = {}
+        
     except (BadRequest, Forbidden, TimedOut) as e:
         print(e)
 
@@ -436,6 +445,12 @@ async def calculate_scores(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Display quiz results, even if only partial or no responses are available
 async def display_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global is_quiz_active
+    cancel_active = False
+    
+    if display_chat:
+        chatid = display_chat 
+    else:
+        chat_id = chat_id
 
     # Check if there are any scores to display
     try:
@@ -462,7 +477,7 @@ async def display_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Send the results message to the chat
         try:
-            await context.bot.send_message(chat_id=chat_id, text=result_message)
+            await context.bot.send_message(chat_id=chatid, text=result_message)
         except Exception as e:
             print(f"Error sending message: {e}")
     
