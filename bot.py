@@ -20,7 +20,7 @@ from telegram.error import Forbidden,BadRequest, TimedOut
 # Bot configuration
 TOKEN: Final = '7673671830:AAFaDzia9GXrXAz86UEFwzkXGB7OUEFb3xM'
 BOT_USERNAME: Final = '@slizyy_bot'
-ALLOWED_GROUP_IDS = [-1001817635995, -1002114430690]
+ALLOWED_GROUP_IDS = [-1001817635995]
 EXCEL_FILE = 'SYNO5.xlsx'
 
 
@@ -30,6 +30,7 @@ EXCEL_FILE = 'SYNO5.xlsx'
 quiz_state = {}
 correct_users = defaultdict(int)  # Tracks correct answers per user
 selected_poll_count = 0 
+selected_quizscore_count=0
 active_poll=1 # Number of polls user requested
 answers_received = defaultdict(int)  # Tracks how many answers have been received for each user
 is_quiz_active = False  # New variable to track if a quiz is active
@@ -86,7 +87,7 @@ def load_quiz_data(file_path, selected_poll_count):
 
 async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        global is_quiz_active, correct_users, chat_id, unanswered_poll,cancel_active
+        global is_quiz_active, correct_users, chat_id, unanswered_poll,cancel_active,selected_quizscore_count
         cancel_active = False
         
         reset_used_srnos()
@@ -108,6 +109,7 @@ async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         is_quiz_active = True  # Set to True when a new quiz starts
         quiz_state = {}
+        selected_quizscore_count=0
         
         correct_users.clear()  # Reset scores at the beginning of each new quiz
 
@@ -383,7 +385,7 @@ final_poll_responses = {}
 # Handle poll answers
 async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        global final_poll_responses,display_chat
+        global final_poll_responses,display_chat,selected_quizscore_count
         
         answer: PollAnswer = update.poll_answer
         poll_id = answer.poll_id
@@ -395,7 +397,7 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
         # Check if poll ID exists in quiz_state
         if poll_id not in quiz_state:
             return
-        print("issue is here 1")
+        
         # Get the quiz data for the poll
         quiz_data = quiz_state[poll_id]
         correct_answer = quiz_data["correct_answer"]
@@ -420,17 +422,14 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if user_id not in quiz_data["users"]:
             quiz_data["users"].append(user_id)
         # If it's the last poll, track user responses specifically for this poll
-        if curr_poll == selected_poll_count+1:
-            await asyncio.sleep(16)
-            final_poll_responses[user_id] = selected_answer
-            a1 = len(final_poll_responses)
-            b1 =len(quiz_state[poll_id]["users"])
-            # Check if all users have responded to the final poll
-            if len(final_poll_responses) == len(quiz_state[poll_id]["users"]):  # All users answered the final poll
-                await calculate_scores(update, context)
-
-                # Reset final_poll_responses after the results are shown
-                final_poll_responses = {}
+        if curr_poll == selected_poll_count+1 or curr_poll == selected_poll_count:
+            print("equal equal",selected_quizscore_count)
+            await asyncio.sleep(5)
+            if selected_quizscore_count ==0:
+                 print("equal equal 2",selected_quizscore_count)
+                 await calculate_scores(update, context)
+                 final_poll_responses = {}
+                 selected_quizscore_count =1
         
     except (BadRequest, Forbidden, TimedOut) as e:
         print(e)
