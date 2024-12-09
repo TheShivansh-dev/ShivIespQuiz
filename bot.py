@@ -107,6 +107,7 @@ async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return
 
         is_quiz_active = True  # Set to True when a new quiz starts
+        quiz_state = {}
         
         correct_users.clear()  # Reset scores at the beginning of each new quiz
 
