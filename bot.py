@@ -422,7 +422,7 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if user_id not in quiz_data["users"]:
             quiz_data["users"].append(user_id)
         # If it's the last poll, track user responses specifically for this poll
-        if curr_poll == selected_poll_count+1 or curr_poll == selected_poll_count:
+        if curr_poll == selected_poll_count+1:
             print("equal equal",selected_quizscore_count)
             await asyncio.sleep(5)
             if selected_quizscore_count ==0:
