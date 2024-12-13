@@ -115,7 +115,7 @@ async def start_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         correct_users.clear()  # Reset scores at the beginning of each new quiz
 
         difficulty_keyboard = [
-            [InlineKeyboardButton("NDA's English Grammar", callback_data='type_NDA')],
+            [InlineKeyboardButton("NDA-CDS's English Grammar", callback_data='type_NDA')],
             [InlineKeyboardButton("Random English Grammar", callback_data='type_BASIC')],
         ]
         reply_markup = InlineKeyboardMarkup(difficulty_keyboard)
@@ -142,7 +142,7 @@ async def handle_type_selection(update: Update, context: ContextTypes.DEFAULT_TY
         difficulty_message = ''
 
         if query.data == 'type_NDA':
-            selected_button_text = f"@{username} selected NDA \n Please wait..."
+            selected_button_text = f"@{username} selected NDA-CDS English Grammar \n Please wait..."
             try:
                 await query.edit_message_text(text=selected_button_text)
             except (BadRequest, Forbidden, TimedOut) as e:
