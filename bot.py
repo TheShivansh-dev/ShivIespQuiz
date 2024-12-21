@@ -391,7 +391,7 @@ async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE
         except (BadRequest, Forbidden, TimedOut) as e:
                 print(f"Error canceling the quiz: {e}")
             
-
+        chat_id =-1001817635995
         cancel_active = True
         selected_polls = load_quiz_data(EXCEL_FILE,selected_poll_count) 
         selected_polls.append({
